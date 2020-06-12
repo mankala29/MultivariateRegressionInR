@@ -1,0 +1,586 @@
+---
+title: "Final Report Draft"
+author: "Evils"
+date: "3/24/2020"
+output: html_document
+---
+
+**Introduction**  
+
+We use economic data from the Heritage Foundation to run a multivariate linear regression analysis on the data they provide. This analysis is then used to introduce additional concepts for evaluating multivariate regression. Some countries are very corrupt, which discourages investment, others have goverments, which do not let businesses to function properly. On the other hand, there are countries where there are strict rules of law, which enables people to do their own businesses according to rules. There are countries where goverment subsidizes infant industries until they get comperative advantage in their sector. There are a plethora of organizations, which complile economic data to try to quantify the quality of governance amonng countries.  
+
+For instance, Fraser Institute remains one of them, which publishes an index of Economic Freedom Rankings, the Heritage Foundation, a political think tank with their annual Index of Economic Freedom. Studies have indicated that these indices have a strong relationship with economic growth. Furthermore, from a theoretical perspective, it is predicted that increased freedom will lead to improved prosperity.  
+
+For this research, as a group, we are going to use Heritage Foundation’s 2020 data. We decided to choose the Heritage data because it is almost clean data, which needs a little corrections. Moreover, the data contains a lot of economic variables such as inflation, unemployment as well as various GDP measures, which is worth to start asking questions about our data and decide what we want to explore becasue that will help us while making decisions about data cleaning, features for our interest as well as the way of evaluation of our results.  
+
+**Literature Review**  
+
+Economic freedom is the  right of people to have a control over their own services and property. In an economically free society, peole have freedom to work, produce, consume and invest in any way they want (Heritage Foundation 2019). Increase in economic freedom leads to improvement in economic growth (Razmi and Rafaei, 2013).  
+
+There are a lot of researches where the positive influence of economic freedom to growth of countries have found. For example, according to Islam (1996), there is a positive relationship between economic freedom and per capita income. In his research, he used panel least square method, where he divided countries into 3 group low-income, middle income and high income. The result shows that in every country, the impact of economic freedom on growth rate is possitve. Another study was conducted by Carlsson and Lundstrom where they found mixed effects of component of economic freedom index to development of countries (2002). There are a plethore of studies where the relationship between economic freedom and growth rate are found.  
+
+However, there is no any conducted research, where which components of economic freedom have more importance on growth rate are found. As a Evils group, we decided that in this research, if we find the most important components, we can give our suggestion to countries where growth rate is low.  
+
+**Goal of the Research-**  
+
+The goal of our research is to see whether the indices are good predictors of economic prosperity of countries. So, we are interested to explore the data variables and see if they are predictive of at least one of the economic indicators that we have in our dataset - GDP growth, unemployment and etc.  
+
+If we want to see how well these indices predict actual wealth for individuals, which is the best measure of economic prosperity, we’d do better to look at the GDP per capita PPP number, which is available in our data. As it does take into account purchasing power parity and is given as a per capita metric, we could make proper comparisons between economies.  
+
+To explain it with an example, it should be no suprise that China has more GDP than Singapore’s due to their population difference despite of the fact that Singapore has more economic freedom and higher level of development. So, it is better to explore the relationship between the Index of Economic Freedom and GDP per Capita PPP as a proxy for individual wealth and prosperity. With this purpose, we may be able to identify what has the greatest impact on improving standard of living.  
+
+1. Exploring the relationship between the Index of Economic Freedom and GDP per Capita PPP as a proxy for prosperity.  
+2. Identifying factors, which have greatest impact on standard of living.  
+3. Recommending policy advices to countries to further improve thier Economic Freedom as well as prosperity.  
+
+**Background-**  
+
+According to https://www.heritage.org/index/about Economic freedom is based on 12 quantitative and qualitative factors, grouped into four broad categories, or pillars, of economic freedom:  
+1.Rule of Law (property rights, government integrity, judicial effectiveness)  
+2.Government Size (government spending, tax burden, fiscal health)  
+3.Regulatory Efficiency (business freedom, labor freedom, monetary freedom)  
+4.Open Markets (trade freedom, investment freedom, financial freedom)  
+
+Each of the twelve economic freedoms within these categories is graded on a scale of 0 to 100. A country’s overall score is derived by averaging these twelve economic freedoms, with equal weight being given to each.  
+
+**Business Question**  
+
+-What is the relationship between Economic Freedom and Development of countries?  
+-Which factors play key role for prosperity?  
+-How can we group countries based on Economic Freedom Index and what factors play essential role for prosperity of countries in high-level Economic Freedom Index group?  
+
+**Methods Implemented**  
+
+To analyse data, we have used some descriptive statistics to get a basic idea of the dataset we are going to use. We first start with using multiple regression model, where we will also introduce additional concepts for evaluating our regression such as adjusted R square, residual analysis, Q-Q plots, multicoliniarity.  
+
+Furthermore, we have added an additional variable to the data based on the 2020 score generated for the countries which is listed as given below -  
+
+The mean of the X2020.Score is taken and found to be 61.5.  
+This is used to create four categories as given below -  
+
+1 - 25 => Poor  
+25.1 - 50 => Below Average  
+50.1 - 75 => Good  
+75.1 + => Excellent  
+
+After creating categorical variable, we will identifies factors, which have more influence on their prosperity, and using that data, we will give advice to countries to improve their economic freedom by taking into concentration those factors so that to improve their stage in our hierarchy.  
+
+**Block Diagram**  
+
+![block-diagram](C:/Users/SwetaMankala/Desktop/Intermediate Analytics/Block-Diagram.JPG)  
+
+>Install the required packages
+
+```{r}
+list.of.packages <- c("tinytex", "ggplot2", "pls", "glmnet", "Matrix", "party", "tree", "ineq", "factoextra", "cluster", "tidyverse", "pls", "gridExtra", "smbinning", "psych", "InformationValue", "car", "cluster", "magrittr", "tibble", "NbClust", "Matrix", "e1071")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+```
+
+>Descriptive Statistics over the Data Set acquired
+
+```{r}
+library(ggplot2) #will be needed
+library(moments) #will be needed
+index2020_data1 <- read.csv("C:/Users/SwetaMankala/Desktop/Intermediate Analytics/index2020_data1.csv")
+
+#to view the initial portions of the dataset
+head(index2020_data1, 5)
+```
+
+We need to clean the data set and remove the empty values - 
+
+```{r}
+data.clean <- na.omit(index2020_data1)
+```
+
+Summary of the dataset - 
+
+```{r}
+summary(data.clean)
+```
+
+To find out the umber of rows and columns that our dataset contains - 
+
+```{r}
+dim(data.clean)
+data.clean
+```
+
+We obtain the detailed numerical values of descriptive statistics for all the variables in the dataset. Upon further investigation, we can select some of the best variables to work with and segregate our independent and dependent variables. 
+
+```{r}
+library(psych)
+describe(data.clean)
+```
+
+We select 202 Score of the Economic Freedom data to compare the score obtained by each and every country. 
+
+```{r}
+library(ggplot2)
+library(moments)
+#Histogram overlaid with kernel density curve plotted with more advanced **qqplot()** from **ggplot2()** package
+
+#index2020_data1$X2020.Score <- as.numeric(index2020_data1$X2020.Score)
+ggplot(index2020_data1, aes(x=X2020.Score)) + 
+  geom_histogram(aes(y=..density..),
+                 binwidth = 5, colour="black", fill="white") +
+  geom_density(alpha=.2, fill="#FF6666") # Overlay with transparent density plot
+```
+
+A Q-Q plot is a scatterplot which is generated by plotting two quantile sets against each other. Since both quantile sets come from the same distribution we could see the points forming a approximately straight line.
+
+We use the 2020 score obtained from all the countries to plot the quantile sets of each country against each other. Upon further analysis, we find out that it is a heavy-tailed qqplot() that almost fits the qqline() on a straight line.
+
+```{r}
+index2020_data1$X2020.Score <- as.numeric(index2020_data1$X2020.Score)
+qqnorm(index2020_data1$X2020.Score,xlab="theoretical quantiles", ylab="X2020.Score", main="Index2020_data1")
+qqline(index2020_data1$X2020.Score, col = "steelblue", lwd = 2)
+```
+
+We now perform a test of normality. The Shapiro-Wilk test of normality is generally more sensitive for sample sizes upto one to two thousand. Since this test have the tendency to be too sensitive, we have plotted other visual representations like ggplot and qqnorm plots with fitted regression lines.  
+
+* Null hypothesis $\it{H_{0}}$: Data is normally distributed  
+* Alternative hypothesis $\it{H_{1}}$: We reject if $p$-value is less than 0.05 (claim)
+
+```{r}
+test_results = shapiro.test(index2020_data1$X2020.Score)
+if (test_results$p.value > 0.05)
+{ 
+  cat("The distribution can be considered Normal, p-value=", test_results$p.value)
+}
+test_results
+```
+
+So our $p$-value is less than the significance level proving that our data is normally-distributed.
+
+>Perform regression analysis over the dataset
+
+We create train and test sets using the SplitRatio. 
+
+```{r}
+require(caTools) #loading the library
+
+set.seed(123)
+
+data_split <- sample.split(data.clean$X2020.Score, SplitRatio = 0.8)
+data.train <- subset(data.clean, data_split = TRUE)
+data.test <- subset(data.clean, data_split = FALSE)
+```
+
+On our preliminary analysis, we perform **linear regression** against 2020 scores obtained considering all the other factors in the dataset. This helps us determine the extent to which there could be a linear relationship between the independent variable 2020 Score with the other dependent variables in the dataset as mentioned below. 
+
+```{r}
+fit_regression <- lm(X2020.Score ~ Property.Rights+Judical.Effectiveness+Government.Integrity+Tax.Burden+Gov.t.Spending+Fiscal.Health+Business.Freedom+Labor.Freedom+Monetary.Freedom+Trade.Freedom+Investment.Freedom+Financial.Freedom+Tariff.Rate....+Income.Tax.Rate....+Corporate.Tax.Rate....+Tax.Burden...of.GDP+Gov.t.Expenditure...of.GDP+Population..Millions.+GDP..Billions..PPP.+GDP.Growth.Rate....+X5.Year.GDP.Growth.Rate....+GDP.per.Capita..PPP.+Unemployment....+Inflation....+FDI.Inflow..Millions.+Public.Debt....of.GDP.,
+                     data = index2020_data1) # get the fit and store to fit_regression object
+coefficients(fit_regression) #show results
+
+lm_predicted_values = predict(fit_regression,  newdata=data.test)
+summary(fit_regression)
+```
+
+From the regression analysis performed, we obtain 91.91% variance in economic freedom in countries which is explained by the independent variables. 
+
+Our second step is to perform **principal component analysis** which is a useful technique for exploratory data analysis allowing us to better visualize the variation present in the data with many variables what contribute to 2020 scores of economic freedom for all the countries listed. Since, our data set is a large one, for many variables that we have in our sample we can reduce the dimensionality and regress to find out the predicted errors comparing it with linear regression. 
+
+We do the above mentioned to find out the variances obtained to try out methods that further help improve create better predictive models. 
+
+```{r}
+head(data.clean, 5)
+```
+
+```{r}
+data.pca <- data.clean[-c(1,2,3,4,5,9,21,26)]
+data.pca2 <- prcomp(data.pca, scale. = TRUE)
+summary(data.pca2)
+```
+
+```{r}
+library(factoextra)
+fviz_eig(data.pca2, main = "Economic Freedom PCA")
+```
+
+```{r}
+suppressPackageStartupMessages(library(pls)) # suppress warning for the demo sake
+set.seed (1000) # seed random generator
+pcr_model <- pcr(X2020.Score~., data = data.pca, scale = TRUE, validation = "CV")
+
+#Plot the cross-validation mean square errors as a function of component number used
+validationplot(pcr_model, val.type = "MSEP") 
+```
+
+From the cross-validation plot we can infer that the model has a little shift towards variance. 
+
+```{r}
+pcr_predict2 <- predict(pcr_model, data.test, ncomp = 3)
+pcr_predict3 <- predict(pcr_model, data.test, ncomp = 3)
+cat("Prediction error of PCR for 2 coefficients = ", mean((pcr_predict2 - data.test$X2020.Score)^2), "\n")
+cat("Prediction error of PCR for 3 coefficients = ", mean((pcr_predict3 - data.test$X2020.Score)^2), "\n")
+cat("Prediction error of Linear Regression =", mean((lm_predicted_values - data.test$X2020.Score)^2))
+```
+
+We obtain a lower prediction error using the linear regression. Regression of the principal component does not consider the response variable when determining which key components to remove. The decision to remove components would only be based on the size of the feature variance. 
+
+Using **Ridge Regression** in this scenario, a diagonal matrix is added to the X'X matrix so that it becomes better conditioned. 
+
+```{r}
+library(Matrix)
+library(glmnet)
+x.tr <- model.matrix(X2020.Score~., data = data.train)[,-1]
+y.tr <- data.train$X2020.Score
+x.val <- model.matrix(X2020.Score~., data = data.test)[,-1]
+y.val <- data.test$X2020.Score
+
+set.seed(700)
+rr.cv <- cv.glmnet(x.tr, y.tr, alpha = 0)
+rr.cv
+plot(rr.cv)
+```
+
+We obtain minimum mean-squared error to be 330.5 and the leaset-squared error to be 398.1. 
+The plot above depicts the values from a low bias region to a generalization error. 
+
+```{r}
+rr.bestlam <- rr.cv$lambda.min
+rr.goodlam <- rr.cv$lambda.1se
+
+# predict validation set using best lambda and calculate RMSE
+rr.fit <- glmnet(x.tr, y.tr, alpha = 0)
+plot(rr.fit, xvar = "lambda", label = TRUE)
+```
+
+Since, the ridge regression enforces the coefficients to be shrunk to zero, hence minimizing their impact on the trained model. Using the method glmnet to map the direction of each of the variable coefficients of x against log lambda. The graph shows at which point each coefficient is shrinking to null. 
+
+>Further Analysis
+
+We create boxplots for the most important variables to compare their variations. 
+
+```{r}
+x <- data.pca[,1:4]
+y <- data.pca[,5]
+par(mfrow=c(1,4))
+  for(i in 1:4)
+    boxplot(x[,i], main=names(data.pca)[i])
+```
+
+From the above plot, the variance for World.Rank variable exceeds that of any other. 
+
+>Test Harness using 10-fold cross validation
+
+```{r}
+library(caret)
+#Run algorithms using 10-fold cross validation
+control <- trainControl(method = "cv", number = 10)
+metric <- "RMSE"
+```
+
+Build models - We get an idea from the plots that some of the classes are partially linearly separable in some dimensions, so we are expecting generally good results.
+
+-Classification and Regression Trees (CART).    
+-k-Nearest Neighbors (kNN).    
+-Support Vector Machines (SVM) with a linear kernel.  
+-Random Forest (RF)  
+
+This is a good mixture of simple linear (LDA), nonlinear (CART, kNN) and complex nonlinear methods (SVM, RF). We reset the random number seed before reach run to ensure that the evaluation of each algorithm is performed using exactly the same data splits. It ensures the results are directly comparable.
+
+```{r}
+#install.packages('e1071', dependencies=TRUE)
+n <- names(data.pca$X2020.Score)
+f <- as.formula(paste("X2020.Score~.", paste(n[!n %in% "y"], collapse = " + ")))
+set.seed(7)
+
+#nonlinear algorithms
+set.seed(7)
+fit.cart <- train(X2020.Score~., data = data.pca, method = "rpart", metric = metric, trControl = control)
+
+#kNN
+set.seed(7)
+fit.knn <- train(X2020.Score~., data = data.pca, method = "knn", metric = metric, trControl = control)
+
+#advanced algorithms
+#SVM
+set.seed(7)
+fit.svm <- train(X2020.Score~., data = data.pca, method = "svmRadial", metric = metric, trControl = control)
+
+#Random forest
+set.seed(7)
+fit.rf <- train(X2020.Score~., data = data.pca, method = "rf", metric = metric, trControl = control)
+```
+
+We now have 4 models and accuracy estimations for each. We need to compare the models to each other and select the most accurate.
+
+We can report on the regression metrics of each model by first creating a list of the created models and using the summary function.
+
+```{r}
+results <- resamples(list(cart = fit.cart, knn = fit.knn, svm = fit.svm, rf = fit.rf))
+summary(results)
+```
+
+We can also create a plot of the model evaluation results and compare the spread and the mean accuracy of each model. There is a population of accuracy measures for each algorithm because each algorithm was evaluated 10 times (10 fold cross validation).
+
+```{r}
+dotplot(results)
+```
+
+This gives a nice summary of what was used to train the model and the mean and standard deviation (SD). 
+
+If there is any one statistic that normally takes precedence over the others, it is the root mean squared error (RMSE), which is the square root of the mean squared error. When it is adjusted for the degrees of freedom for error (sample size minus number of model coefficients), it is known as the standard error of the regression or standard error of the estimate in regression analysis.
+
+This is the statistic whose value is minimized during the parameter estimation process, and it is the statistic that determines the width of the confidence intervals for predictions.
+
+The lowest RMSE that the model here shows is the Random Forest measure. Random Forest gives you probability of belonging to class whereas SVM gives you distance to the boundary, you still need to convert it to probability somehow if you need probability.
+
+Our decision would be to use Support Vector Machine (SVM) as a base to start our analysis upon. There are still many questions that do not have any output variables in the dataset which would require some unsupervised techniques such as k-means or DBSCAN clusterig techniques. 
+
+As posed to the initial risk stated in the beginning of the document, we have decided to create another variable containing 4 attributes - Best, Better, Good, Average which is computed upon the measures such as Government Expenditure, Tax Burden, Income Tax and some freedom variables such as Business, Labor, Monetary freedom etc. 
+
+>Importing Data Set with variable 'Status'
+
+The variable Status is computed using Excel which takes X2020.Scores attribute (containing dependent variables from Economic Freedom indices) and uses this to present four categories - Excellent, Good, Below Average, Poor.  
+
+1 - 25 => Poor  
+25.1 - 50 => Below Average  
+50.1 - 75 => Good  
+75.1 + => Excellent
+
+```{r}
+index2020_category <- read.csv("C:/Users/SwetaMankala/Desktop/Intermediate Analytics/index2020_data2.csv", stringsAsFactors = FALSE)
+
+#to view the initial portions of the dataset
+head(index2020_category, 5)
+```
+
+We remove the factor variables and clean the dataset removing empty values.
+
+```{r}
+dataNumeric <- index2020_category[-c(3,4,5)]
+dataNumeric <- na.omit(dataNumeric)
+```
+
+We have split our dataset into train and test sets. 
+
+```{r}
+index <- 1:nrow(dataNumeric)
+testIndex <- sample(index, trunc(length(index)/3))
+testset <- dataNumeric[testIndex,]
+trainset <- dataNumeric[-testIndex,]
+```
+
+```{r}
+trainset
+```
+
+The plot below shows a general composition of how the categories present here has been split according to our X2020.Score variable. The region consisting of the 'good' status seems to be dominating which is a good indication of the economy. 
+
+```{r}
+ggplot(dataNumeric) + aes(x=as.numeric(X2020.Score), group=Status, fill=Status) + labs(x="X2020.Score", y="Count") + geom_histogram(binwidth=1, color='black')
+```
+
+The below graph shows a scatterplot of the data indices w.r.t the variables 2020 Scores and GDP..Billions..PPP.  
+
+```{r}
+library(caret)
+library(e1071)
+library(kernlab)
+library(RColorBrewer)
+library(ggplot2)
+
+ggplot(data = dataNumeric, aes(x = X2020.Score, y = GDP..Billions..PPP., colour = "pink")) + 
+  geom_point(size = 2) + 
+  scale_color_manual(values=c("red")) +
+  theme(legend.position = "none")
+```
+
+>Exploration of Data
+
+**Support Vector Machine** is a supervised machine learning model with associated learning algorithms that analyzes data used for classification and regression analysis. In this algorithm, each data item is plotted as a point in n-dimensional space (where n is the number of features), with each value of each feature being the value of a particular coordinate. 
+
+In the Support Vector Machine algorithm, what we are trying to do here is basically trying to decide a decision boundary at a distance from the original hyper plane such that data points closest to the hyper plane or the support vectors. In simple terms that we are going to take only those those points which have least error rate. Thus giving us a better fitting model.   
+
+For this to work, we implement the methods as available which give the highest accuracy. As we start off with radial SVM, we get an accuracy of 0.81%.  
+
+```{r}
+library(caret)
+library(e1071)
+library(kernlab)
+
+svmfit <- svm(dataNumeric$X2020.Score ~ dataNumeric$GDP..Billions..PPP., data = dataNumeric, kernel = "radial")
+print(svmfit)
+
+predictModel <- predict(svmfit, dataNumeric)
+
+resultSVM <- table(pred = predictModel, true = dataNumeric[, 6])
+resultSVM
+accuracySVM <- sum(diag(resultSVM))/sum(resultSVM)
+
+cat('The accuracy of SVM radial model is', round(accuracySVM*100, 2), '%\n')
+```
+
+```{r}
+table(resultSVM)
+```
+
+The accuracy here shows a values of 1.08% which is very low. The predictions w.r.t the categories here show us the kind of values that gets computed.  
+
+The below given is a method implemented to give SVM Linear Kernel predictions.  
+
+Before we train our model, we’ll first implement the trainControl() method. This will control all the computational overheads so that we can use the train() function provided by the caret package.  
+
+The trainControl() method takes 3 parameters -   
+
+- “method” parameter defines the resampling method, in this demo we’ll be using the repeatedcv or the repeated cross-validation method.  
+- next parameter is the “number”, this basically holds the number of resampling iterations.  
+- “repeats ” parameter contains the sets to compute for our repeated cross-validation. We are using setting number =10 and repeats =3  
+
+We are passing 2 values in our “pre-process” parameter “center” & “scale”. These two help for centering and scaling the data. After pre-processing, these convert our training data with mean value as approximately “0” and standard deviation as “1”. The “tuneLength” parameter holds an integer value. This is for tuning our algorithm.  
+
+We build our SVM Classifier as given below selecting the value C (cost) in the Linear classifier. This can be done by inputting values in grid search.  
+
+We are going to put some values of C using expand.grid() into “grid” dataframe. Next step is to use this dataframe for testing our classifier at specific C values. It needs to be put in train() method with tuneGrid parameter.
+
+```{r}
+trControl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
+grid <- expand.grid(C = c(0,0.01, 0.05, 0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2,5))
+svm_Linear <- train(X2020.Score~., data = trainset, method = "svmLinear", 
+                    trControl = trControl, preProcess = c("center", "scale"), 
+                    tuneLength = 10, tuneGrid = grid)
+svm_Linear
+plot(svm_Linear)
+```
+
+Now, our model is trained with C value as 0.75. We can find out the predictions and accuracy of the model. 
+
+```{r}
+test_pred <- predict(svm_Linear, newdata = trainset)
+result <- table(predict = test_pred, truth = trainset$X2020.Score)
+accuracySL <- sum(diag(result))/sum(result)
+cat('The accuracy of SVM linear model is', round(accuracySL*100, 2), '%\n')
+```
+
+Our output shows the accuracy as given above letting us know the improvement of SVM Radial to SVM Linear method. The graph is another visualization of the cost of SVM linear kernel giving its best accuracy at 0.75. 
+
+The below given method is another implementation of the SVM Linear Kernel wherein we use a C-Classification type method to find the values. 
+
+```{r}
+library(e1071)
+
+dataNumeric$Status <- as.character(dataNumeric$Status)
+
+
+#if (NA) {}
+#plot(predModel$X2020.Score, col = "blue")
+svm.model <- svm(X2020.Score ~ GDP..Billions..PPP., 
+                 data = trainset, cost = 100, gamma = 0.0001, type = 'C', kernel = 'linear')
+
+print(svm.model)
+svm.pred <- predict(svm.model, trainset)
+
+resultSL <- table(predict = svm.pred, truth = trainset$X2020.Score)
+accuracy <- sum(diag(resultSL))/sum(resultSL)
+
+cat('The accuracy of SVM linear model is', round(accuracy*100, 2), '%\n')
+x <- trainset$X2020.Score
+plot(X2020.Score ~ GDP..Billions..PPP., data = trainset)
+points(x, log(x), col = 2)
+points(x, svm.pred, col = 4)
+```
+
+The graph here shows a linear scatterplot of the data points in the set giving the best selection among them. The scatterplot here represents the actual and predicted values. The red points represent the actual values and the blue points represent the predicted values.  
+
+One can say that, the predicted values of GDP vs. 2020 Score could rise up as the GDP for the particular country increases in a linear straight line fit. 
+
+```{r}
+#Calculate the parameters of SVR model
+W = t(svm.model$coefs) %*% svm.model$SV
+
+#Find value of b
+b = svm.model$rho
+```
+
+We calculate the above values as given.  
+
+The is another plot of our categories represented with different variables.
+
+```{r}
+rfData <- read.csv("C:/Users/SwetaMankala/Desktop/Intermediate Analytics/index2020_data2.csv")
+
+p = ggplot(rfData,aes(x=X2020.Score,  
+                    y=GDP..Billions..PPP., 
+                    color=Status))
+p + geom_jitter(alpha=0.3) +  
+  scale_color_manual(breaks = c('Excellent', 'Good', 'Poor', 'Below Average'),
+                     values=c('yellow','red', 'black', 'purple', 'blue'))
+```
+
+We can see as given in the plot that countries having excellent economy has its data values plotted in 'black'. This includes countries such as Canada, Denmark, Hong Kong Iceland etc.  
+
+Countries with good economy has its data values plotted in 'purple' which have been scattered in the graph. This shows a range of 25 to 150 billion GDP values across the 2020 Scores of the respective countries.  
+
+The countries with poor economy has its data values plotted in 'blue' which do not represent a lot of countries. As given in our dataset, we have only one country which is North Korea that has a poor economy.  
+
+The countries which have below average economy have their data values plotted in 'red' and are shown in the left-hand side with GDP 0-25 billion across the range of 2020 Scores with countries such as Iran, Cuban, Sudan etc. 
+
+**Random Forest** was the last implementation set in place to classify our values. Since, we have categories in which values can be organized, we could use the method of multiple decision trees combined to give results for the most predicted values.  
+
+The below given is the splitting of the dataset for cross-validation.  
+
+```{r}
+#Create data for training
+sample.ind = sample(2,  
+                     nrow(rfData),
+                     replace = T,
+                     prob = c(0.05,0.95))
+data.dev = rfData[sample.ind==1,]  
+data.val = rfData[sample.ind==2,]  
+
+cat("Original Data-\n")
+table(rfData$Status)/nrow(rfData)
+cat("\n")
+
+cat("Training Data-\n")
+table(data.dev$Status)/nrow(rfData)
+cat("\n")
+
+cat("Testing Data-\n")
+table(data.val$Status)/nrow(rfData)
+```
+
+>Conclusion
+
+In conclusion, throughout the research we analyzed the relationship between variables from 4 broad category: 
+
+1.Rule of Law (property rights, government integrity, judicial effectiveness)  
+2.Government Size (government spending, tax burden, fiscal health)  
+3.Regulatory Efficiency (business freedom, labor freedom, monetary freedom)  
+4.Open Markets (trade freedom, investment freedom, financial freedom)  
+
+We also analysed the economic freedom of the countries.  
+
+From the analyses performed over the variables, we come to the conclusion that all these variables have a positive influence on economic freedom. It means that as there is a positive linear relationship between economic freedom and growth of country, if there is an improvement in any if these variables, the country can prosper.  
+
+> Risk Analysis and Mitigation
+
+One of the primary goals of our research was to find the main factors among all independent variables who impact more on economic freedom index of countries whose status is excellent. However, throughout the analysis, we come to conclusion that there is no any specific factors, which is applicable to all economically most free countries. That is why we are not able to give an advice to poor countries to improve specific feature of economic freedom. Instead, our advice is to improve their economic freedom as much as they can no matter which feature of economic freedom to focus.
+
+>Appendix  
+
+As we implement random forest, we get the following error that says that the number of categorical predictors are more than 53 which restricts the usage of the function randomForest(). 
+
+Fit Random Forest Model -
+
+fStatus <- factor(data.dev$Status)
+rf = randomForest(Status~ ., ntree = 100, data = data.dev)
+plot(rf)  
+
+>References
+
+-Carlsson, F. and Lundstrom, S. (2002). Economic Freedom and Growth: Decomposing the Effects. Public Choice, 112(¾):335-344.  
+-Economic Freedom of the World. (2019, September 12). Retrieved from https://www.cato.org/economic-freedom-world  
+-Heritage Foundation. (2019). Index of Economic Freedom. Available at www.heritage.org/index.
+uIslam, S. (1996). Economic Freedom, Per Capita Income and Economic Growth. Applied Economics Letters, 3(9):595–597  
+-Razmi, M. J. and Refaei, R. (2013). The Effect of Trade Openness and Economic Freedom on Economic Growth: The Case of Middle East and East Asian Countries. International Journal of Economic and Financial Issues, 3(2):376-385.  
+
+ 
+
+
+
